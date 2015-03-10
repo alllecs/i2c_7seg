@@ -3,29 +3,48 @@
 #include <linux/i2c-dev.h>
 #include <fcntl.h>
 
+#define dev "/dev/i2c-1"
+#define addr 0x71
+
+
 void clearDisplayI2C(int file)
 {
-	char buf[10];
-	buf[0] = 0x76;
-	write(file, buf, 1); 
+	char buf = 0x76;
+	if (write(file, &buf, 4) != 4) {
+		printf("Failed to write to the i2c bus.\n");
+	}
 }
 
-void main(void) {
+/*
+Parameters:
+
+  * display I2C address (0x71 by default);
+  * I2C bus number (/dev/i2c-<bus number>);
+  * exit on error;
+  * int main() -> return code;
+    ** 0 --- success;
+    ** != 0 --- error;
+*/
+
+void main(int argc, char *argv[]) {
+
+	char buf[10];
+
 	int file;
 	char filename[40];
 	const char *buffer;
-	int addr = 0x71;
 	int i;
-	char buf[10];
 	char j;
 
-	sprintf(filename,"/dev/i2c-1");
+	sprintf(filename, dev);
 	if ((file = open(filename,O_RDWR)) < 0) {
 		printf("Failed to open the bus.");
+		exit(1);
 	}
 
 	if (ioctl(file,I2C_SLAVE,addr) < 0) {
 		printf("Failed to acquire bus access and/or talk to slave.\n");
+		exit(1);
 	}
 
 	clearDisplayI2C(file);
@@ -35,20 +54,9 @@ void main(void) {
 		buf[i] = j;
 	}
 
-		write(file, buf, 4);
-/*
-	buf[0] = 'A';
-	buf[1] = 'B';
-	buf[2] = 'C';
-	buf[3] = '0';	
-		
 	if (write(file, buf, 4) != 4) {
 		printf("Failed to write to the i2c bus.\n");
-		buffer = strerror(errno);
-		printf(buffer);
 		printf("\n\n");
 	}
-*/
 	close(file);
 }
-
